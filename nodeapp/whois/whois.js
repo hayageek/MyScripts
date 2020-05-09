@@ -95,7 +95,7 @@ class WhoisLib {
     }
     async getExpiry() {
 
-        return await this.getDetailsForFields(['registrarRegistrationExpirationDate']) || 'unknown';
+        return await this.getDetailsForFields(['registrarRegistrationExpirationDate','registryexpirydate']) || 'unknown';
     }
     async getCreationDate() {
 
@@ -112,7 +112,7 @@ class WhoisLib {
         return adminEmail;
     }
     async getOrganization() {
-        var org = await this.getDetailsForFields(['techOrganization', 'adminOrganization', '', 'registrantOrganization', 'Registrant']);
+        var org = await this.getDetailsForFields(['techOrganization', 'adminOrganization', '', 'registrantOrganization', 'Registrant','registrar']);
         if (org == null) {
             org = 'unknown';
         }
