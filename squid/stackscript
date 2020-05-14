@@ -1,0 +1,28 @@
+#!/bin/bash -e
+# <UDF name="squid_user" Label="Proxy Username" />
+# <UDF name="squid_password" Label="Proxy Password" />
+
+
+
+exec > >(tee -i /var/log/stackscript.log)
+
+/usr/bin/apt  -y update 
+/usr/bin/apt  -y install aptitude libtool-bin ed libltdl-dev
+#/usr/bin/aptitude -y build-dep squid3
+/usr/bin/git clone https://github.com/hayageek/MyScripts.git MyScripts
+/bin/mkdir -p /etc/squid/
+
+/bin/cp -f MyScripts/squid/conf/*.conf /etc/squid/
+/bin/cp MyScripts/squid/service/squid /etc/init.d/
+cd MyScripts/squid/deb/ && /usr/bin/dpkg -i squid_5.0.2-1_amd64.deb && cd -
+
+/usr/bin/htpasswd -b -c /etc/squid/passwd $SQUID_USER $SQUID_PASSWORD
+
+
+/usr/sbin/update-rc.d squid defaults
+/usr/sbin/update-rc.d squid enable
+/sbin/iptables -I INPUT -p tcp --dport 33128 -j ACCEPT
+/sbin/iptables-save
+
+/usr/sbin/service squid stop
+/usr/sbin/service squid start
