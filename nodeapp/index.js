@@ -11,7 +11,7 @@ var app = express();
 app.use(bodyParser.json());
 
 function checkAuth(req, res, next) {
-    var api_key = process.env.API_KEY || 'kqDIvhIhIIROPkfWlC3KpgtAt1e35ZSMCNUJ60olPqlsoP9TEJ8SFZIKhvBFlpAc';
+    var api_key = process.env.HTTP_API_PROXY_KEY || 'kqDIvhIhIIROPkfWlC3KpgtAt1e35ZSMCNUJ60olPqlsoP9TEJ8SFZIKhvBFlpAc';
     if (req.params.key == api_key) {
         next(); //If session exists, proceed to page
     } else {

@@ -1,6 +1,8 @@
 #!/bin/bash -e
 # <UDF name="squid_user" Label="Proxy Username" />
 # <UDF name="squid_password" Label="Proxy Password" />
+# <UDF name="http_api_proxy_key" Label="HTTP PROXY API KEY" />
+# <UDF name="node_version" Label="NODE JS Version" />
 
 
 
@@ -21,8 +23,18 @@ cd MyScripts/squid/deb/ && /usr/bin/dpkg -i squid_5.0.2-1_amd64.deb && cd -
 
 /usr/sbin/update-rc.d squid defaults
 /usr/sbin/update-rc.d squid enable
-/sbin/iptables -I INPUT -p tcp --dport 33128 -j ACCEPT
+/sbin/iptables -I INPUT -p tcp --dport 58080 -j ACCEPT
 /sbin/iptables-save
 
 /usr/sbin/service squid stop
 /usr/sbin/service squid start
+
+
+/usr/bin/curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | /bin/bash
+
+source /root/.nvm/nvm.sh
+nvm install $NODE_VERSION
+nvm use $NODE_VERSION
+/root/.nvm/versions/node/v$NODE_VERSION/bin/npm install -g pm2
+cd /MyScripts/nodeapp && /root/.nvm/versions/node/v$NODE_VERSION/bin/npm install . && /root/.nvm/versions/node/v$NODE_VERSION/bin/pm2 start index.js && cd -
+#HTTP_API_PROXY_KEY
