@@ -3,6 +3,7 @@ const asNetworks = require('as-networks');
 const axios = require('axios');
 var UserAgents = require('user-agents')
 const cidrTools = require("cidr-tools");
+
 class ASN {
     constructor() {}
 
@@ -227,7 +228,7 @@ class ASN {
         if (asn.indexOf("AS") != 0) {
             asn = 'AS' + asn;
         }
-        var fns = [this.getASNInfoFromHackerTarget, this.getASNInfoFromHackerBGPView, this.getASNInfoFromWhoIs];
+        var fns = ['getASNInfoFromHackerTarget', 'getASNInfoFromHackerBGPView', 'getASNInfoFromWhoIs'];
         return await this.runFuncByRandom(fns, asn);
     }
     getIpInfoFromWhois(ip) {
@@ -281,7 +282,7 @@ class ASN {
     }
 
     async getIpInfo(ip) {
-        var fns = [this.getIpInfoFromHackerTarget, this.getIpInfoFromBgpView, this.getIpInfoFromWhois];
+        var fns = ['getIpInfoFromHackerTarget', 'getIpInfoFromBgpView', 'getIpInfoFromWhois'];
         return await this.runFuncByRandom(fns, ip);
     }
     async getIpRangesFromWhois(asnNumber) {
@@ -301,10 +302,10 @@ class ASN {
 
         var sorted_fns = this.sort(fns);
         for (var i = 0; i < sorted_fns.length; i++) {
-            var fn = sorted_fns[i];
-            console.log('Calling function ' + fn.name)
+            var fname = sorted_fns[i];
+            console.log('Calling function ' + fname)
             try {
-                var ret = await fn(args);
+                var ret = await this[fname](args);
                 if (ret) {
                     return ret;
                 }
@@ -314,7 +315,10 @@ class ASN {
         }
         return null;
     }
+
+   
     async getIpRanges(asnNumber) {
+       
         var fns = [this.getIpRangesFromWhois(asnNumber), this.getIpRangeFromBgpView(asnNumber), this.getIpRangeFromHackerTarget(asnNumber)];
         var list = await Promise.all(fns);
         var all_list = [];
@@ -323,7 +327,9 @@ class ASN {
                 all_list = all_list.concat(list[i]);
             }
         }
-        return cidrTools.merge(all_list)
+
+        var ret = cidrTools.merge(all_list);
+        return ret;
     }
 
 }
