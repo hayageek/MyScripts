@@ -63,15 +63,18 @@ class ASN {
         var lines = await ASN.getRespFromHackerTarget(ip)
         if (lines && lines.length > 0) {
             var tmp = lines[0].split('","')
-            var asn = tmp[1].replace('"', '').trim();
-            var cidr = tmp[2].replace('"', '').trim();
-            var org = tmp[3].replace('"', '').trim().toLowerCase();
-            org = org.charAt(0).toUpperCase() + org.slice(1);
-            return {
-                asn: asn,
-                ip: ip,
-                cidr: cidr,
-                org: org
+            if (tmp && tmp.length > 3) {
+                var asn = tmp[1].replace('"', '').trim();
+                var cidr = tmp[2].replace('"', '').trim();
+                var org = tmp[3].replace('"', '').trim().toLowerCase();
+                org = org.charAt(0).toUpperCase() + org.slice(1);
+                return {
+                    asn: asn,
+                    ip: ip,
+                    cidr: cidr,
+                    org: org
+                }
+
             }
         }
         return null;
@@ -316,9 +319,9 @@ class ASN {
         return null;
     }
 
-   
+
     async getIpRanges(asnNumber) {
-       
+
         var fns = [this.getIpRangesFromWhois(asnNumber), this.getIpRangeFromBgpView(asnNumber), this.getIpRangeFromHackerTarget(asnNumber)];
         var list = await Promise.all(fns);
         var all_list = [];
