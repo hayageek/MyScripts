@@ -60,7 +60,7 @@ class ASN {
         }
     }
     async getIpInfoFromHackerTarget(ip) {
-        var lines = await this.getRespFromHackerTarget(ip)
+        var lines = await ASN.getRespFromHackerTarget(ip)
         if (lines && lines.length > 0) {
             var tmp = lines[0].split('","')
             var asn = tmp[1].replace('"', '').trim();
