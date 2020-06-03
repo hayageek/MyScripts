@@ -5,7 +5,7 @@ var UserAgents = require('user-agents')
 const cidrTools = require("cidr-tools");
 
 class ASN {
-    constructor() {}
+    constructor() { }
 
     static async getRespFromHackerTarget(asn) {
         var url = `https://api.hackertarget.com/aslookup/?q=${asn}`;
@@ -32,17 +32,20 @@ class ASN {
         var lines = await ASN.getRespFromHackerTarget(asnNumber)
         if (lines && lines.length > 0) {
             var tmp = lines[0].split('","')
-            var asn = tmp[0].replace('"', '').trim();
-            var org = tmp[1].replace('"', '').trim().toLowerCase();
-            org = org.charAt(0).toUpperCase() + org.slice(1);
-            var asnInput = asnNumber.toLowerCase().replace('as', '');
-            if (asn == asnInput) {
-                return {
-                    asn: asnNumber,
-                    org: org
+            if (tmp && tmp.length >= 2) {
+                var asn = tmp[0].replace('"', '').trim();
+                var org = tmp[1].replace('"', '').trim().toLowerCase();
+                org = org.charAt(0).toUpperCase() + org.slice(1);
+                var asnInput = asnNumber.toLowerCase().replace('as', '');
+                if (asn == asnInput) {
+                    return {
+                        asn: asnNumber,
+                        org: org
 
+                    }
                 }
             }
+
         }
         return null;
     }

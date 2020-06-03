@@ -1,1 +1,3 @@
-export HTTP_PROXY=9080
+export HTTP_PORT=9080
+export HTTP_API_PROXY_KEY=
+
