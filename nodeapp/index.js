@@ -7,7 +7,14 @@ var Whois = require('./whois/whois');
 var ASN = require('./asn');
 var Util = require('./util');
 var fs = require('fs');
+var URL = require('url');
+var Screenshot = require('./lib/screenshot');
 var CachemanFile = require('cacheman-file');
+var DoSpace = require('./lib/dospaces');
+const uuid = require('uuid');
+const sharp = require('sharp');
+var fs = require('fs');
+
 var cache = new CachemanFile({
     tmpDir: __dirname + '/tmp'
 });
@@ -137,6 +144,81 @@ app.get('/asn/:type/:key/:input', checkAuth, async function (req, res) {
     }
 });
 
+function getParsedUrl(url) {
+    var parsed = URL.parse(url);
+    if (parsed.port == null) {
+        if (parsed.protocol == 'http:') {
+            parsed.port = '80';
+        } else if (parsed.protocol == 'https:') {
+            parsed.port = '443';
+        }
+    }
+    return parsed;
+}
+async function resize(path, width, height, quality) {
+    return await sharp(path).resize(width, height).jpeg({
+            quality: quality
+        })
+        .toBuffer();
+}
+app.post('/screenshot/:key', checkAuth, async function (req, res) {
+    var params = req.body || {};
+    var browser = params.browser || 'chrome';
+    var width = params.width || 1024;
+    var height = params.height || 768;
+    var blockAds = params.blockAds || true;
+    var stealth = params.stealth || true;
+    var quality = params.quality || 50;
+    var root_domain = params.root_domain;
+    var url = params.url;
+
+
+    if (url == null || root_domain == null) {
+        res.json({
+            status: 0,
+            data: "Invalid input params"
+        });
+        return;
+    }
+
+    var parsed_url = getParsedUrl(url);
+    var uploadPath = `${root_domain}/${parsed_url.hostname}:${parsed_url.port}/sc.png`;
+    var localPath = '/tmp/' + uuid.v4() + '.png';
+    var sshot = new Screenshot();
+
+    try {
+        if (browser == 'chrome') {
+
+            await sshot.captureChrome(url, localPath, {
+                width: width,
+                height: height,
+                blockAds: blockAds,
+                stealth: stealth
+            });
+        } else {
+            await sshot.capturePhantom(url, localPath, {
+                width: width,
+                height: height,
+                blockAds: blockAds,
+                stealth: stealth
+            });
+        }
+        if (fs.existsSync(localPath) && fs.statSync(localPath).size > 0) {
+            var doSpace = new DoSpace();
+            //var convrtedBuffer = await resize(localPath, width, height, quality)
+            //await doSpace.uploadBuffer(convrtedBuffer, uploadPath)
+            await doSpace.upload(localPath, uploadPath)
+            fs.unlinkSync(localPath);
+        }
+        res.json({
+            status: 0
+        });
+        return;
+    } catch (error) {}
+    res.json({
+        status: -1
+    });
+});
 var tmpDir = Util.getTmpDir();
 if (!fs.existsSync(tmpDir)) {
     fs.mkdirSync(tmpDir);
