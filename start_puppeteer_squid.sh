@@ -9,5 +9,6 @@ export ENABLE_XVBF=false
 export KEEP_ALIVE=true
 export FUNCTION_ENABLE_INCOGNITO_MODE=true
 export DEFAULT_IGNORE_HTTPS_ERRORS= true
+export TOKEN=$HTTP_API_PROXY_KEY
 cd node_app && pm2 start index.js
 sh $APP_DIR/start.sh
