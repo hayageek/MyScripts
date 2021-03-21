@@ -1,5 +1,6 @@
 const Phantomjs = require('./phantom');
-const Browserless = require('./browserless');
+//const Browserless = require('./browserless');
+const Puppeteer = require('./puppeter');
 var UserAgent = require('./useragent');
 class Screenshot {
 
@@ -32,7 +33,7 @@ class Screenshot {
         return false;
     }
     async captureChrome(url, savePath, config) {
-        var browserless = new Browserless();
+        var browserless = new Puppeteer();
         return await browserless.capture(url, savePath, config)
     }
 };

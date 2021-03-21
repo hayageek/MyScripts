@@ -9,10 +9,10 @@ var Util = require('./util');
 var fs = require('fs');
 var URL = require('url');
 var Screenshot = require('./lib/screenshot');
+var XSSScanner = require('./lib/xss_scanner');
 var CachemanFile = require('cacheman-file');
 var DoSpace = require('./lib/dospaces');
 const uuid = require('uuid');
-const sharp = require('sharp');
 var fs = require('fs');
 
 var cache = new CachemanFile({
@@ -45,7 +45,6 @@ async function getFromCache(key) {
     try {
         return await cacheGet(key);
     } catch (error) {
-        console.log(error);
     }
     return null;
 }
@@ -53,7 +52,6 @@ async function saveToCache(key, data) {
     try {
         await cacheSet(key, data);
     } catch (error) {
-        console.log(error);
     }
 }
 
@@ -214,10 +212,33 @@ app.post('/screenshot/:key', checkAuth, async function (req, res) {
             status: 0
         });
         return;
-    } catch (error) {}
+    } catch (error) {
+
+        Logger.error(`Failed to get screenshot for ${url} ${error.stack}`);
+    }
     res.json({
         status: -1
     });
+});
+
+app.post('/xss_scan/:key', checkAuth, async function (req, res) {
+    var params = req.body || {};
+    var config = params.config || {};
+    var urls = params.urls || [];
+    var xss = new XSSScanner(config);
+    try {
+        await xss.scanUrlWithPayloads(urls);
+        res.json({
+            status: 0,
+            urls: xss.getVulnList()
+        })
+    } catch (error) {
+        Logger.error(`Error in xss_scan ${error.stack}`);
+        res.json({
+            status: -1,
+            urls: []
+        });
+    }
 });
 var tmpDir = Util.getTmpDir();
 if (!fs.existsSync(tmpDir)) {

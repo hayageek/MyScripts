@@ -7,7 +7,20 @@ class Browserless {
         config.width = config.width || 1024;
         config.height = config.height || 768;
         config.timeout = config.timeout || 30000
-        var endpointUrl = `ws://127.0.0.1:3000?token=${process.env.HTTP_API_PROXY_KEY}&blockAds=${config.blockAds}&stealth=${config.stealth}&ignoreHTTPSErrors=${config.ignoreHTTPSErrors}&--window-size=${config.width},${config.height}&timeout=${config.timeout}`;
+        var endpointUrl = `ws://127.0.0.1:3000?token=${process.env.HTTP_API_PROXY_KEY}`;
+        if(config.blockAds == true)
+        {
+            endpointUrl += `&blockAds`;
+        }
+        if(config.stealth == true)
+        {
+            endpointUrl += `&stealth`;
+        }
+        if(config.ignoreHTTPSErrors == true)
+        {
+            endpointUrl += `&ignoreHTTPSErrors&--disable-web-security`;
+        }
+        endpointUrl += `&--window-size=${config.width},${config.height}&timeout=${config.timeout}`;
         const browser = await puppeteer.connect({
             browserWSEndpoint: endpointUrl,
             ignoreHTTPSErrors: true,
