@@ -1,5 +1,6 @@
 FROM node:12-slim
 
+http://www.squid-cache.org/Versions/v5/
 
 echo "deb-src http://deb.debian.org/debian stretch main contrib non-free" >> /etc/apt/sources.list
 apt clean && apt update
