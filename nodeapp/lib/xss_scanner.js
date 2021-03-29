@@ -2,6 +2,8 @@ const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const AdblockerPlugin = require('puppeteer-extra-plugin-adblocker');
 var Logger = require('../logger');
+var UserAgent = require('./useragent');
+puppeteer.use(StealthPlugin());
 
 class XSSScanner {
     constructor(config) {
@@ -9,10 +11,6 @@ class XSSScanner {
         this.vulnerable = [];
     }
     async __openBrowser() {
-
-        //Make it stealthy
-        puppeteer.use(StealthPlugin());
-        //puppeteer.use(AdblockerPlugin());
 
         try {
             const browser = await puppeteer.launch({
@@ -86,7 +84,7 @@ class XSSScanner {
             Logger.error(`Failed to clear cookies :${error.stack}`)
 
         }
-       
+
 
     }
     async sleep(timeout) {
@@ -100,6 +98,9 @@ class XSSScanner {
             var waitTimeForPage = this.config.wait_time_page_load || 3000;
 
             page = await browser.newPage();
+            //Anonymize User agent
+            page.setUserAgent(UserAgent.forWeb());
+
             await page.setBypassCSP(true)
             await page.setCacheEnabled(true);
 
@@ -118,10 +119,11 @@ class XSSScanner {
             try {
                 await page.goto(urlObj.url, {
                     waitUntil: 'networkidle0',
-                    timeout: 10000
+                    timeout: this.config.puppeteer.timeout
                 });
+
             } catch (error) {
-                Logger.error(`Failed to check xss vuln for url ${url} ${error.stack}`)
+                Logger.error(`Failed to check xss vuln for url ${urlObj.url} ${error.stack}`)
             }
 
             //Wait for page load

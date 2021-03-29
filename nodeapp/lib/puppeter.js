@@ -1,6 +1,11 @@
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const AdblockerPlugin = require('puppeteer-extra-plugin-adblocker');
+var UserAgent = require('./useragent');
+
+//Make it stealthy
+puppeteer.use(StealthPlugin());
+//puppeteer.use(AdblockerPlugin());
 
 var fs = require('fs');
 class Puppeteer {
@@ -11,9 +16,6 @@ class Puppeteer {
         config.height = config.height || 768;
         config.timeout = config.timeout || 30000
 
-        //Make it stealthy
-        puppeteer.use(StealthPlugin());
-        puppeteer.use(AdblockerPlugin());
 
         var browser = null;
 
@@ -60,6 +62,10 @@ class Puppeteer {
                 ]
             });
             const page = await browser.newPage();
+
+            //Anonymize User agent
+            page.setUserAgent(UserAgent.forWeb());
+
             await page.goto(url, {
                 waitUntil: 'load',
                 timeout: config.timeout
