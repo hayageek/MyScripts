@@ -1,95 +1,12 @@
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-const AdblockerPlugin = require('puppeteer-extra-plugin-adblocker');
 var Logger = require('../logger');
 var UserAgent = require('./useragent');
-puppeteer.use(StealthPlugin());
-
+var Puppeteer = require('./puppeter');
 class XSSScanner {
     constructor(config) {
         this.config = config;
         this.vulnerable = [];
     }
-    async __openBrowser() {
 
-        try {
-            const browser = await puppeteer.launch({
-                headless: true,
-                ignoreHTTPSErrors: true,
-                timeout: this.config.puppeteer.timeout,
-                defaultViewport: {
-                    width: this.config.puppeteer.width,
-                    height: this.config.puppeteer.height
-                },
-                devtools: false,
-                args: [
-                    "--headless",
-                    "--proxy-server='direct://'",
-                    '--proxy-bypass-list=*',
-                    '--disable-gpu',
-                    '--disable-canvas-aa',
-                    '--disable-2d-canvas-clip-aa',
-                    '--disable-gl-drawing-for-tests',
-                    '--disable-dev-shm-usage',
-                    '--disable-setuid-sandbox',
-                    '--no-first-run',
-                    '--no-sandbox',
-                    '--no-zygote',
-                    '--single-process',
-                    '--ignore-certificate-errors',
-                    '--ignore-certificate-errors-spki-list',
-                    '--enable-features=NetworkService',
-                    '--download-whole-document',
-                    '--disk-cache-dir=/dev/null',
-                    '--deterministic-fetch',
-                    '--use-gl=swiftshader',
-                    '--enable-webgl',
-                    '--hide-scrollbars',
-                    '--mute-audio',
-                    '--disable-infobars',
-                    '--disable-breakpad',
-                    '--disable-notifications',
-                    '--disable-logging',
-                    '--disable-extensions',
-                    '--safebrowsing-disable-auto-update',
-                    '--disable-default-apps',
-                    '--disable-xss-auditor'
-                ]
-            });
-            return browser;
-        } catch (error) {
-            Logger.error(`Failed to open browser :${error.stack}`)
-        }
-
-    }
-    async __closeBrowser(browser) {
-        try {
-            if (browser) {
-                await browser.close();
-            }
-
-        } catch (error) {
-            Logger.error(`Failed to close browser :${error.stack}`)
-        }
-    }
-    async __clearCookies(page) {
-
-        try {
-            const client = await page.target().createCDPSession()
-            await client.send('Network.clearBrowserCookies')
-            if (page._client) {
-                await page._client.send('Network.clearBrowserCookies');
-            }
-        } catch (error) {
-            Logger.error(`Failed to clear cookies :${error.stack}`)
-
-        }
-
-
-    }
-    async sleep(timeout) {
-        await new Promise(resolve => setTimeout(resolve, timeout));
-    }
     async __urlVulnerable(browser, urlObj) {
         Logger.debug(`Checking URL for vuln :${urlObj.url}`)
         var page = null;
@@ -127,8 +44,8 @@ class XSSScanner {
             }
 
             //Wait for page load
-            await this.sleep(waitTimeForPage);
-            await this.__clearCookies(page);
+            await Puppeteer.sleep(waitTimeForPage);
+            await Puppeteer.__clearCookies(page);
             if (page.isClosed() == false) {
                 await page.close();
             }
@@ -142,18 +59,19 @@ class XSSScanner {
     }
     async scanUrlWithPayloads(urls) {
         var delay = this.config.delay || 1000;
+
         var browser = null;
         try {
             //get all the combination for urls
             if (urls && urls.length > 0) {
-                browser = await this.__openBrowser();
+                browser = await Puppeteer.__openBrowser(this.config);
                 if (browser) {
                     for (var i = 0; i < urls.length; i++) {
                         //Check the URL
                         await this.__urlVulnerable(browser, urls[i]);
 
                         //Delay for each Request);
-                        await this.sleep(delay);
+                        await Puppeteer.sleep(delay);
                     }
                 } else {
                     console.log('Failed to load Browser');
@@ -165,7 +83,7 @@ class XSSScanner {
         }
         //close
         if (browser) {
-            await this.__closeBrowser(browser);
+            await Puppeteer.__closeBrowser(browser);
         }
     }
     getVulnList() {
